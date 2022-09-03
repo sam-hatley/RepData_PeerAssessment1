@@ -200,7 +200,7 @@ summary(actimp)
 
 ```{r}
 stepsdayimp = actimp %>% group_by(interval, day) %>%
-              summarise(steps = sum(steps))
+              summarise(steps = mean(steps))
 
 ggplot(stepsdayimp, aes(interval, steps)) + facet_grid(vars(day)) + geom_line()
 ```

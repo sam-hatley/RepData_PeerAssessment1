@@ -430,7 +430,7 @@ summary(actimp)
 
 ```r
 stepsdayimp = actimp %>% group_by(interval, day) %>%
-              summarise(steps = sum(steps))
+              summarise(steps = mean(steps))
 ```
 
 ```

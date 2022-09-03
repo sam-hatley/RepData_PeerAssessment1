@@ -71,10 +71,8 @@ mean(activity$steps[complete.cases(activity$steps)])
 
 Will create a histogram using ggplot2:
 
-```{r echo = FALSE}
-library(ggplot2)
-```
 ```{r}
+library(ggplot2)
 stepsday = aggregate(actign$steps, by=list(actign$date), sum)
 names(stepsday) = c("date","steps")
 ggplot(data = stepsday, aes(x=steps)) + geom_histogram()
@@ -94,12 +92,10 @@ median(stepsday$steps)
 
 This is similar to [the above question](#What-is-mean-total-number-of-steps-taken-per-day), but requires aggregation along interval, rather than day. Just for the sake of variety, I'll use dplyr here, rather than base r. We'll start again from the na filtered data set to do so:
 
-```{r echo = FALSE}
-library(dplyr)
-```
 ```{r}
-stepsint =  actign %>% group_by(interval) %>% summarise(total = sum(steps))
-ggplot(stepsint, aes(y = total, x = interval)) + geom_line(color = "blue")
+library(dplyr)
+stepsign =  actign %>% group_by(interval) %>% summarise(totalign = sum(steps))
+ggplot(stepsign, aes(y = totalign, x = interval)) + geom_line(color = "blue")
 ```
 
 >Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
@@ -112,6 +108,76 @@ Looks like interval 835.
 
 ## Imputing missing values
 
+> 1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with _NA_s.
 
+This can be done with a simple summary:
+
+```{r}
+summary(activity)
+```
+
+No _NA_s in the date or interval columns, but 2304 _NA_s in steps. That's around 13% of our data.
+
+To be more explicit, we have 2304 rows with _NA_s.
+
+> 2. Devise a strategy for filling in all of the missing values in the dataset.
+
+Thankfully, there are quite a few packages in r designed for imputation, ```mice``` being one of the more common ones. We can recreate the results from above in a more visual way with the ```md.pattern()``` function:
+
+```{r}
+library(mice)
+md.pattern(activity)
+```
+
+Again, telling us that all of our missing values are in "steps", and there are 2304 missing entries. We'll toss the data set into mice using the default options:
+
+```{r}
+impdat = mice(activity,seed = 100)
+summary(impdat)
+```
+> 3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
+
+Now that we have the imputed data, we can just toss that into a completed data set with a shockingly simple call:
+
+```{r}
+actimp = complete(impdat)
+summary(actimp)
+```
+Note the lack of _NA_ values in "steps". 
+
+Just to be sure that the new data set is equal to the original (in terms of dimensions):
+
+```{r}
+dim(activity)
+dim(actimp)
+```
+
+> 4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
+We'll essentially be following the same lines of thinking as in [a previous question](#What-is-mean-total-number-of-steps-taken-per-day). However, I'd like to merge the previous data set with the new one, so we can make comparisons directly. I'll print the ignored values in blue, as above, with the imputed data in red.
+
+```{r}
+stepsimp =  actimp %>% group_by(interval) %>% summarise(totalimp = sum(steps))
+mergedat = merge(stepsimp,stepsign, by = "interval")
+ggplot(mergedat, aes(x = interval)) + 
+      geom_line(aes(y = totalimp), color = "red") + 
+      geom_line(aes(y = totalign), color = "blue")
+```
+
+We can fetch the mean, median, and other values with a summary call:
+
+```{r}
+summary(mergedat)
+```
+
+Imputed data has a mean of 2276.7, and a median of 2229.0. Data that ignored the _NA_ values has a mean of 1981.3 and mean of 1981.3.
+
+**Imputing values in this manner increases the number of daily steps taken.**
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+> For this part the ```weekdays()```  function may be of some help here. Use the dataset with the filled-in missing values for this part.
+
+> 1. Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
+
+> 2. Make a panel plot containing a time series plot (i.e., ```type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.

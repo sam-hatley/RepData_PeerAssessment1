@@ -402,7 +402,44 @@ Imputed data has a mean of 2276.7, and a median of 2229.0. Data that ignored the
 ## Are there differences in activity patterns between weekdays and weekends?
 
 > For this part the ```weekdays()```  function may be of some help here. Use the dataset with the filled-in missing values for this part.
-
 > 1. Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
 
+Easy enough.
+
+
+```r
+actimp$day = sapply(actimp$date, weekdays)
+actimp$day = ifelse(actimp$day %in% c("Saturday", "Sunday"),
+                    "weekend", "weekday")
+actimp$day = as.factor(actimp$day)
+summary(actimp)
+```
+
+```
+##      steps             date               interval           day       
+##  Min.   :  0.00   Min.   :2012-10-01   Min.   :   0.0   weekday:12960  
+##  1st Qu.:  0.00   1st Qu.:2012-10-16   1st Qu.: 588.8   weekend: 4608  
+##  Median :  0.00   Median :2012-10-31   Median :1177.5                  
+##  Mean   : 37.32   Mean   :2012-10-31   Mean   :1177.5                  
+##  3rd Qu.: 12.00   3rd Qu.:2012-11-15   3rd Qu.:1766.2                  
+##  Max.   :806.00   Max.   :2012-11-30   Max.   :2355.0
+```
+
 > 2. Make a panel plot containing a time series plot (i.e., ```type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.
+
+
+```r
+stepsdayimp = actimp %>% group_by(interval, day) %>%
+              summarise(steps = sum(steps))
+```
+
+```
+## `summarise()` has grouped output by 'interval'. You can override using the
+## `.groups` argument.
+```
+
+```r
+ggplot(stepsdayimp, aes(interval, steps)) + facet_grid(vars(day)) + geom_line()
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
